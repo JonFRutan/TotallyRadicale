@@ -8,11 +8,9 @@
     <body>
         <h1>CDAV Admin</h1>
         <nav>
-            <a href="/">Home</a>
-            <a>Import</a>
-            <a>Export</a>
-            <a>Users</a>
-            <a>Contacts</a>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('import_csv') }}">Import</a>
+            <a href="{{ url_for('export_group') }}">Export</a>
         </nav>
         <hr>
         {% with messages = get_flashed_messages() %}
