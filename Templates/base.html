@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>CDAV Admin</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css')}}">
+    </head>
+    <body>
+        <h1>CDAV Admin</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a>Import</a>
+            <a>Export</a>
+            <a>Users</a>
+            <a>Contacts</a>
+        </nav>
+        <hr>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for message in messages %}
+                <li>{{message}}</li>
+                {% endfor %}
+            </ul>
+            {% endwith %}
+            {% block content %}{% endblock %}
+    </body>
+</html>

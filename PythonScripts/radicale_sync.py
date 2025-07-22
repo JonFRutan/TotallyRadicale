@@ -1,14 +1,26 @@
 #jfr
-import sys, psycopg2, requests
-from utils import DB, RAD
+import sys, os, shutil
+from datetime import datetime
+#from utils import DB, RAD
 
-def create_user_accounts():
-    db_connection = psycopg2.connect(**DB)
-    db_cursor = db_connection.cursor()
-    db_cursor.execute("select * from users;")
-    users = db_cursor.fetchall()
+RADICALE_STORAGE = "/var/lib/radicale/collections/collection-root"
+ADMIN_BOOK = os.path.join(RADICALE_STORAGE, "adminuser", "super")
+JAMF_BOOK = os.path.join(RADICALE_STORAGE, "jamfuser", "super")
 
-    session = requests.Session()
-    session.auth = (RAD_USER, RAD_PASS)
-    for user in users:
-        pass  
+def sync_contacts():
+    if not os.path.isdir(ADMIN_BOOK):
+        print(f"[Error] File {ADMIN_BOOK} not found.")
+        return
+    os.makedirs(os.path.dirname(JAMF_BOOK), exist_ok=True)
+
+    if os.path.exists(JAMF_BOOK):
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup_path = f"{JAMF_BOOK}.bak-{timestamp}"
+        shutil.move(JAMF_BOOK, backup_path)
+        print(f"[INFO] Existing jamfuser/super backed up to: {backup_path}")
+
+    shutil.copytree(ADMIN_BOOK, JAMF_BOOK)
+    print(f"Admin -> Jamf Sync Successful")
+
+if __name__ == "__main__":
+    sync_contacts()

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% blockcontent %}
+<h2>Import Contacts</h2>
+<form method="POST" enctype="multipart/form-data">
+    <label for="file">CSV File:</label><br>
+    <input type="file" name="file" required><br><br>
+    <label for="group">Group(s): </label><br>
+    <input type="text" name="group" placeholder="e.g. 'general, admin'"><br><br>
+    <button type="submit">Import</button>
+</form>
+{% endblock %}

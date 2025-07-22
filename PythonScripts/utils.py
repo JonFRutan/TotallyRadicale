@@ -1,5 +1,5 @@
 #jfr
-import os, socket, hashlib, uuid, requests
+import os, socket, hashlib, uuid, requests, csv
 from xml.etree import ElementTree as ET
 from urllib.parse import urlparse
 from dotenv import load_dotenv
@@ -16,6 +16,7 @@ RAD_URLS=os.getenv('RAD_URLS')
 RAD_USER=os.getenv('RAD_USER')
 RAD_PASS=os.getenv('RAD_PASS')
 RAD_ADDR=os.getenv('RAD_ADDR')
+RAD_COMP=os.getenv('RAD_COMP')
 RAD_CERT=os.getenv('RAD_CERT', "true").lower()
 
 #FIXME - Rename these and combine them into one large dictionary
@@ -29,6 +30,7 @@ group_ids = {
     'SF': 5    #Safety
 }
 
+vcard_info = ["DisplayName", "JobTitle", "Mail", "MobilePhone"]
 DB = {
     "dbname": DB_NAME,
     "user": DB_USER,
@@ -41,14 +43,16 @@ RAD = {
     "user": RAD_USER,
     "password": RAD_PASS,
     "addressbook": RAD_ADDR, 
-    "ca_cert": RAD_CERT
+    "ca_cert": RAD_CERT,
+    "company": RAD_COMP
 }
 
-#Deterministic UUID generation to avoid duplicates
+#Deterministic UUID generation to avoid duplicate records in radicale
+#NOTE: This is called in radicale_ex using emails as 'identifier'
 def generate_uid(identifier: str) -> str:
     return str(uuid.UUID(hashlib.md5(identifier.encode()).hexdigest()))
 
-#creates a session for put/finds or whatever else
+#creates a session for put/finds
 def create_session(username, password):
     session = requests.Session()
     session.auth = (username, password)
@@ -89,6 +93,7 @@ def list_addressbooks(session, radicale_url, username):
     return books
 
 #Checks if connection is on local machine to the radicale URL
+#Used in radicale_ex
 def is_local(radicale_url):
     host = urlparse(radicale_url).hostname
     local_ips = set()
@@ -100,3 +105,10 @@ def is_local(radicale_url):
     except socket.gaierror:
         pass
     return host in local_ips
+
+#cleans a csv down to explicitly set fields in vcard_info (defined above)
+def clean_csv(filepath):
+    with open(filepath, newline='', encoding='utf-8-sig') as csv_file:
+        reader = csv.DictReader(csv_file)
+        cleaned_csv = [{col: row[col] for col in vcard_info if col in row} for row in reader]
+    return cleaned_csv

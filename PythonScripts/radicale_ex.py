@@ -12,12 +12,17 @@ def export_vcards(cards, filepath):
     print(f"{filepath} created with {count} vCards.")
 
 #takes all the records found in the contacts table and generates vcards out of them.
-def generate_vcards():
+def generate_vcards(group):
     cards = []
     db_connection = psycopg2.connect(**DB)
     db_cursor = db_connection.cursor()
 
-    db_cursor.execute("""select full_name, email, phone, title from contacts;""")
+    db_cursor.execute("""
+    select full_name, email, phone, title from contacts c
+    join group_contacts gc on c.id = gc.contact_id
+    join groups g on gc.group_id = g.id
+    where g.name = %s
+    """, (group,))
     #the cursor object is iterable, so we can iterate through retrieved records.
     for full_name, email, phone, title in db_cursor:
         vcard = vobject.vCard()
@@ -44,10 +49,8 @@ def generate_vcards():
             title_field.value = title
 
         cards.append(vcard)
-        vcard.serialize()
-        vcard.prettyPrint()
-
-    db_connection.commit()
+        #vcard.serialize()
+        #vcard.prettyPrint()
     db_cursor.close()
     db_connection.close()
 
@@ -55,7 +58,6 @@ def generate_vcards():
     #export_vcards(cards)
     return cards
 
-#ugly parameters and function name
 def upload_card_to_radicale(session, radicale_url, username, addressbook, vcard):
     vcard_file = f"{vcard.uid.value}.vcf"
     contact_url = f"{radicale_url}/{username}/{addressbook}/{vcard_file}"
@@ -70,16 +72,13 @@ def upload_card_to_radicale(session, radicale_url, username, addressbook, vcard)
     except requests.exceptions.RequestException as e:
         print(f"Error uploading: {e}")
 
-def upload_group_to_book(group, addressbook):
-    pass
-    # The idea here is that provided an addressbook and a group, we can select all the contacts pertaining to that group
-    # using the join table group_contacts and push them into a specified addressbook.
-    # these addressbooks for now are manually created on the Radicale interface, like 'super'.
+def upload_group_to_radicale(group, addressbook):
+    session = create_session(RAD["user"], RAD["password"])
+    upload_to_radicale(RAD["href"], RAD["user"], RAD["password"], addressbook, RAD["ca_cert"], group, session)
 
-# this must be replaced, it's too statically written for it's own good.
-# change the .env variables into arguments. 
-def upload_all_to_radicale(radicale_url, radicale_username, radicale_password, addressbook, ca_cert, session=None):
+def upload_to_radicale(radicale_url, radicale_username, radicale_password, addressbook, ca_cert, group, session=None):
     if session is None:
+        session = create_session(RAD["user"], RAD["password"])
         session.auth = (radicale_username, radicale_password)
         if is_local(radicale_url):
             session.verify = False
@@ -90,7 +89,7 @@ def upload_all_to_radicale(radicale_url, radicale_username, radicale_password, a
         else:
             session.verify = ca_cert
 
-    cards = generate_vcards()
+    cards = generate_vcards(group)
     if not cards:
         print("Error at contact card creation")
         return
@@ -104,4 +103,5 @@ if __name__ == "__main__":
     results = list_addressbooks(session, RAD["href"], RAD["user"])
     while addressbook not in results:
         addressbook = input(f"Choose an addressbook: {results}: ")
-    upload_all_to_radicale(RAD["href"], RAD["user"], RAD["password"], addressbook, RAD["ca_cert"], session)
+    group = input("Type in the group you want to upload: ")
+    upload_to_radicale(RAD["href"], RAD["user"], RAD["password"], addressbook, RAD["ca_cert"], group, session)

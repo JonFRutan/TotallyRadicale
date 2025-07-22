@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Export Contacts</h2>
+<form method="POST">
+  <label for="group">Group Name:</label><br>
+  <input type="text" name="group"><br><br>
+  <label for="addressbook">Radicale Addressbook:</label><br>
+  <input type="text" name="addressbook"><br><br>
+  <button type="submit">Export</button>
+</form>
+{% end block %}

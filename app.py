@@ -1,7 +1,7 @@
 #jfr
 import requests
 from flask import Flask, render_template, request, redirect, url_for
-import PythonScripts as cs
+import PythonScripts
 
 app = Flask(__name__)
 
@@ -14,13 +14,23 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-@app.route('/import')
-def import_to_db():
-    return None
+@app.route('/import', methods=["GET", "POST"])
+def import_csv():
+    if request.method == 'POST':
+        file = request.files["file"]
+        group = request.form["group"]
+        filepath = f"/tmp/{file.filename}"
+        file.save(filepath)
+        import_users_from_csv(filepath, group)
+        flash("Contacts imported successfully")
+        return redirect("/")
+    return render_template('import.html')
 
-@app.route('/export')
-def export_to_db():
-    return None
+@app.route('/export', methods=["POST"])
+def export_group():
+    group = request.form["group"]
+    addressbook = request.form["addressbook"]
+    upload_group_to_radicale(group, addressbook)
 
 
 if __name__ == '__main__':
