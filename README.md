@@ -1,3 +1,8 @@
+# ARCHIVED  
+The *TotallyRadicale* Github Repo was made for version control of a software I was writing for my workplace. It's development was moved onto an internal GitLab repository and has been updated and maintained elsewhere.  
+This repository has been neglected since, and therefore will be archived. Sorry!  
+
+
 # TotallyRadicale  
 Contact management scripts for joining together a PostgreSQL database and a [Radicale](https://radicale.org/v3.html) server.  
 Included within the project are all necessary Python requirements, which includes Radicale.  
